@@ -1,7 +1,7 @@
 import aiohttp
 from loguru import logger
 
-from application.interfaces import WooCommerceClient
+from src.application.interfaces import WooCommerceClient
 
 
 class AsyncWooClient(WooCommerceClient):

@@ -2,8 +2,8 @@ import asyncio
 
 from loguru import logger
 
-from domain import SPU
-from utils import retry_async
+from src.domain import SPU
+from src.utils import retry_async
 
 
 class PoizonSPUService:

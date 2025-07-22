@@ -3,7 +3,7 @@ import asyncio
 from aiohttp import ClientSession, ClientResponseError
 from loguru import logger
 
-from application.interfaces import PoizonClient
+from src.application.interfaces import PoizonClient
 
 '''
 categoryIds:

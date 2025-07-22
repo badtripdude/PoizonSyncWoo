@@ -2,8 +2,8 @@ import asyncio
 
 from loguru import logger
 
-import domain
-from domain import SPU
+from src import domain
+from src.domain import SPU
 
 
 async def process_spu(spu, config, mapper, client, ):

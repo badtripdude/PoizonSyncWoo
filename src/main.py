@@ -13,11 +13,11 @@ from infrastracture.thepoizon_client import ThePoizonClient
 from infrastracture.woo_client import AsyncWooClient
 
 load_dotenv()
-LOG_DIR = Path("logs")
+LOG_DIR = Path("../logs")
 LOG_DIR.mkdir(exist_ok=True)
 
 MAX_PAGES = 10
-MAX_PRODUCTS_PER_BRAND = 5
+MAX_PRODUCTS_PER_BRAND = 50
 
 # Настройка логирования в файл
 logger.add(
@@ -30,7 +30,7 @@ logger.add(
     diagnose=True,  # выводить переменные при исключении
     level="TRACE"  # уровень логирования
 )
-with open("config.yaml", "r", encoding="utf-8") as f:
+with open("../config.yaml", "r", encoding="utf-8") as f:
     config = yaml.safe_load(f)
 
 brands = {

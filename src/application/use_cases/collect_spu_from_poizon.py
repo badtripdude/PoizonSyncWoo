@@ -1,6 +1,6 @@
 from loguru import logger
 
-from application.services import PoizonSPUService
+from src.application.services import PoizonSPUService
 
 
 async def collect_spu_from_poizon(*,
