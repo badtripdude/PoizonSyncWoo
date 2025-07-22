@@ -1,0 +1,7 @@
+pricing:
+  mode: "thepoizon"  # варианты: "dewu" или "thepoizon"
+  exchange_rate: 13.2
+  X: 100
+  Y: 500
+  Z: 1000
+  coefficient: 0.85
