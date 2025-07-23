@@ -72,7 +72,7 @@ class SPUMapper:
                                 name = prop_item_model['name'].lower()
                                 name = SPUMapper.RU_ENG.get(name, name)
                                 vars_.update(
-                                    {f'{prop_['propertyKey'].lower()}_{name}': prop_item_model['value'], })
+                                    {f"{prop_['propertyKey'].lower()}_{name}": prop_item_model['value'], })
             regular_price = pz_sku.get('skuSpeedInfo', [{}])[0].get('speedPrice', {}).get('money', {}).get('minUnitVal')
 
             if regular_price and 'eu_size' in vars_:

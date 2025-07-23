@@ -21,12 +21,12 @@ class PoizonSPUService:
         for product in products:
             if product.get('brandId') not in brand_ids:
                 logger.debug(
-                    f'Товар `{product.get("title")}` не соответствует бренду `{brand_name}(id = {brand_ids})`. '
-                    f'Найденный бренд id = {product.get('brandId')}. Ищем дальше...')
+                    f"Товар `{product.get('title')}` не соответствует бренду `{brand_name}(id = {brand_ids})`. "
+                    f"Найденный бренд id = {product.get('brandId')}. Ищем дальше...")
                 continue
 
             if 'adidas' in brand_name.lower() and 'yeezy' in product.get('title'):
-                logger.debug(f'При парсинге бренда Adidas найден товар `{product.get('title')}`. Пропускаем...')
+                logger.debug(f"При парсинге бренда Adidas найден товар `{product.get('title')}`. Пропускаем...")
                 continue
             if remaining <= 0:
                 break

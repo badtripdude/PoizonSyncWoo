@@ -107,7 +107,7 @@ class AsyncWooClient(WooCommerceClient):
             product_data["brands"] = [brand]
 
         if existing:
-            logger.info(f'Товар  `{product_data.get('name')}` существует, обновляем...')
+            logger.info(f"Товар  `{product_data.get('name')}` существует, обновляем...")
             product_id = existing["id"]
             await self._request("PUT", f"products/{product_id}", json=product_data)
 
