@@ -2,8 +2,8 @@ import asyncio
 
 from loguru import logger
 
-from src.domain import SPU
-from src.utils import retry_async
+from domain import SPU
+from utils import retry_async
 
 
 class PoizonSPUService:
@@ -25,15 +25,12 @@ class PoizonSPUService:
                     f"Найденный бренд id = {product.get('brandId')}. Ищем дальше...")
                 continue
 
-            if 'adidas' in brand_name.lower() and 'yeezy' in product.get('title'):
+            if 'adidas' in brand_name.lower() and 'yeezy' in product.get('title').lower():
                 logger.debug(f"При парсинге бренда Adidas найден товар `{product.get('title')}`. Пропускаем...")
                 continue
             if remaining <= 0:
                 break
-            detailed_product = await retry_async(self.client.get_product_info, product['spuId'],
-                                                 retries=5,
-                                                 delay=1)
-            spu = self.mapper.from_poizon_to_domain(detailed_product)
+            spu = await self.get_spu_by_spu_id(product['spuId'])
             if spu.skus and spu.article_code:
                 spus.append(spu)
                 remaining -= 1
@@ -44,6 +41,15 @@ class PoizonSPUService:
             else:
                 logger.warning(f"Пропускаем `{spu.title}` — нет размеров или артикула")
         return spus
+
+    async def get_spu_by_spu_id(self, spu_id:int) -> SPU:
+        detailed_product = await retry_async(self.client.get_product_info, spu_id,
+                                             retries=5,
+                                             delay=1)
+        spu = self.mapper.from_poizon_to_domain(detailed_product)
+        return spu
+
+
 
 
 class BrandNormalizer:

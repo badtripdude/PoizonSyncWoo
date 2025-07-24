@@ -1,6 +1,6 @@
-from src import utils
-from src.application.services import BrandNormalizer
-from src.domain import SPU, SKU
+import utils
+from application.services import BrandNormalizer
+from domain import SPU, SKU
 
 
 # from infrastracture.thepoizon_client import PoizonSPU

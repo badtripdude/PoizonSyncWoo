@@ -2,8 +2,8 @@ import asyncio
 
 from loguru import logger
 
-from src import domain
-from src.domain import SPU
+import domain
+from domain import SPU
 
 
 async def process_spu(spu, config, mapper, client, ):
@@ -33,10 +33,10 @@ async def upload_all_spus_to_woocommerce(*,
                                          mapper,
                                          ):
     logger.info(f'Началась выгрузка в WooCommerce {len(spus)} товаров')
-    # for spu in spus:
-    #     await process_spu(spu, config, mapper,client)
-    tasks = [
-        process_spu(spu, config, mapper, client, )
-        for spu in spus
-    ]
-    await asyncio.gather(*tasks, return_exceptions=True)
+    for spu in spus:
+        await process_spu(spu, config, mapper,client)
+    # tasks = [
+    #     process_spu(spu, config, mapper, client, )
+    #     for spu in spus
+    # ]
+    # await asyncio.gather(*tasks, return_exceptions=True)

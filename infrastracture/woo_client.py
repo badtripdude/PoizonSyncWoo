@@ -1,33 +1,62 @@
+import asyncio
+
 import aiohttp
 from loguru import logger
 
-from src.application.interfaces import WooCommerceClient
+from application.interfaces import WooCommerceClient
 
 
 class AsyncWooClient(WooCommerceClient):
     # TODO: create WooProduct
-    def __init__(self, url: str, consumer_key: str, consumer_secret: str):
+    def __init__(self, url: str, consumer_key: str, consumer_secret: str,
+                 session: aiohttp.ClientSession = None):
         self.url = url.rstrip("/") + "/wp-json/wc/v3"
         self.auth = aiohttp.BasicAuth(consumer_key, consumer_secret)
+        self.session = session or aiohttp.ClientSession(auth=self.auth)
 
-    async def _request(self, method: str, endpoint: str, params=None, json=None) -> (int, dict | str):
+    async def close(self):
+        await self.session.close()
+
+    async def _request(self, method: str, endpoint: str, params=None, json=None) -> tuple[int, dict | str]:
+        # TODO: rename to _safe_request
         url = f"{self.url}/{endpoint}"
-        async with aiohttp.ClientSession(auth=self.auth) as session:
-            async with session.request(method, url, params=params, json=json) as resp:
-                status = resp.status
-                content_type = resp.headers.get("Content-Type", "")
-                try:
-                    if "application/json" in content_type:
-                        data = await resp.json()
-                    else:
+        retries = 3
+        delay = 1.0
+
+        for attempt in range(1, retries + 1):
+            try:
+                async with self.session.request(method, url, params=params, json=json) as resp:
+                    status = resp.status
+                    content_type = resp.headers.get("Content-Type", "")
+
+                    try:
+                        if "application/json" in content_type:
+                            data = await resp.json()
+                        else:
+                            data = await resp.text()
+                    except aiohttp.ContentTypeError:
                         data = await resp.text()
-                except aiohttp.ContentTypeError:
-                    data = await resp.text()
 
-                if status >= 400:
-                    logger.error(f"Ошибка API: {status} {method} {url} → {data}")
+                    # Успешный ответ
+                    if 200 <= status < 300:
+                        return status, data
 
-                return status, data
+                    # Ошибки
+                    logger.warning(f"[Попытка {attempt}/{retries}] Ошибка API {status} {method} {url}")
+                    logger.debug(f"Ответ: {data[:300]}")
+
+                    # Не повторяем для 404 и 401
+                    if status in [401, 404]:
+                        raise Exception(f"API вернул {status}: {data[:200]}")
+
+                    # Backoff для ошибок сервера
+                    await asyncio.sleep(delay * (2 ** (attempt - 1)))
+
+            except aiohttp.ClientError as e:
+                logger.error(f"[Попытка {attempt}/{retries}] Ошибка соединения: {e}")
+                await asyncio.sleep(delay * (2 ** (attempt - 1)))
+
+        raise Exception(f"API не ответил после {retries} попыток: {method} {url}")
 
     async def get_product_by_sku(self, sku: str):
         status, products = await self._request("GET", "products", params={"sku": sku})
@@ -159,7 +188,9 @@ class AsyncWooClient(WooCommerceClient):
     async def add_product_variations(self, product_id: int, variations: list[dict]) -> tuple[int, dict]:
         # Установим stock_status по умолчанию
         for variation in variations:
+            variation.setdefault("manage_stock", True)
             variation.setdefault("stock_status", "instock")
+            variation.setdefault("stock_quantity", 1)
 
         payload = {
             "create": variations
@@ -287,8 +318,27 @@ class AsyncWooClient(WooCommerceClient):
 
         return product if status == 200 and product else None
 
-    async def list_products(self, page: int = 1, per_page: int = 10):
+    async def list_products(self, page: int = 1, per_page: int = 10) -> (int, list[dict]):
         return await self._request("GET", "products", params={"page": page, "per_page": per_page})
+
+    async def get_all_products_by_brand(self, brand: str) -> list[dict]:
+        """
+        Возвращает все товары из WooCommerce, у которых бренд совпадает с brand.
+        """
+        products = []
+        page = 1
+        while True:
+            status, data = await self.list_products(page,
+                                                    per_page=100
+                                                    )
+            if not data:
+                break
+            filtered_data = [prod for prod in data if prod.get('brands', [{}])[0].get('name').lower() == brand.lower()]
+            products.extend(filtered_data)
+            if len(data) < 100:
+                break
+            page += 1
+        return products
 
     async def get_all_variations(self, product_id: int) -> list[dict]:
         variations = []
