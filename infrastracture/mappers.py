@@ -16,10 +16,15 @@ class SPUMapper:
             "sku": spu.article_code,
             'spu_id': spu.id_,
             "name": spu.title,
-            "description": spu.desc,
             "images": [{'src': url_image} for url_image in spu.images],
             "brand": BrandNormalizer.normalize_brand(raw_brand=spu.brand_name,
-                                                     title=spu.title)
+                                                     title=spu.title),
+            "description": '\n'.join(
+                [': '.join(
+                    [
+                        next(iter((spec.keys()))), next(iter(spec.values()))
+                    ]
+                ) for spec in spu.specs])
         }
         variations = []
         for sku in spu.skus:
@@ -46,6 +51,9 @@ class SPUMapper:
     def from_poizon_to_domain(data: dict) -> SPU:
         article_number = [prop.get("value") for prop in data.get('baseProperties', []) if
                           prop.get('itemType') == 'ARTICLE_NUMBER']
+        specs = []
+        for base_prop in data.get('baseProperties', []):
+            specs.append({base_prop['key']: base_prop['value']})
         d_spu = SPU(title=data.get('shareInfo', {}).get('shareTitle'),
                     desc=None,
                     id_=data.get('buyDialogModel', {}).get('detail', {}).get('spuId'),
@@ -56,6 +64,7 @@ class SPUMapper:
                     category_id=data.get('buyDialogModel', {}).get('detail', {}).get('categoryId', None),
                     source_url=data.get('shareInfo', {}).get('shareUrl'),
                     brand_name=data.get('brandItemsModel', {}).get('brandName', ''),
+                    specs=specs,
                     )
         if d_spu.brand_name == '':
             d_spu.brand_name = None

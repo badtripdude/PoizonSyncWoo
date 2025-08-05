@@ -55,6 +55,7 @@ async def main():
         consumer_key=os.getenv('WC_CONSUMER_KEY'),
         consumer_secret=os.getenv('WC_CONSUMER_SECRET'),
     )
+    await woo_client.init_session()
     async with ThePoizonClient(api_key=os.getenv('POIZON_API_KEY')) as pz_client:
         for brand_name, brand_ids in brands.items():
             spus = await collect_spu_from_poizon(brand_name=brand_name,

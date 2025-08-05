@@ -12,8 +12,11 @@ class AsyncWooClient(WooCommerceClient):
                  session: aiohttp.ClientSession = None):
         self.url = url.rstrip("/") + "/wp-json/wc/v3"
         self.auth = aiohttp.BasicAuth(consumer_key, consumer_secret)
-        self.session = session or aiohttp.ClientSession(auth=self.auth)
+        self.session = session
 
+    async def init_session(self):
+        if self.session is None:
+            self.session = aiohttp.ClientSession(auth=self.auth)
     async def close(self):
         await self.session.close()
 
@@ -42,12 +45,13 @@ class AsyncWooClient(WooCommerceClient):
                         return status, data
 
                     # Ошибки
+                    data = str(data)
                     logger.warning(f"[Попытка {attempt}/{retries}] Ошибка API {status} {method} {url}")
-                    logger.debug(f"Ответ: {data[:300]}")
+                    logger.debug(f"Ответ: {data[:400]}")
 
                     # Не повторяем для 404 и 401
                     if status in [401, 404]:
-                        raise Exception(f"API вернул {status}: {data[:200]}")
+                        raise Exception(f"API вернул {status}: {data[:400]}")
 
                     # Backoff для ошибок сервера
                     await asyncio.sleep(delay * (2 ** (attempt - 1)))
@@ -166,7 +170,7 @@ class AsyncWooClient(WooCommerceClient):
         })
         return status_code, {"id": product_id, "message": "Product created or updated with variations"}
 
-    async def delete_all_existing_variations(self, product_id: int) -> tuple[int, dict]:
+    async def delete_all_existing_variations(self, product_id: int | str) -> tuple[int, dict]:
         existing_vars = await self.get_all_variations(product_id)
         if not existing_vars:
             return 200, {"message": "Нет вариаций для удаления"}

@@ -17,13 +17,17 @@ class SPU:
                  article_code: str = None, min_price: int = None,
                  max_price: int = None, skus: list[SKU] = None,
                  images: list[str] = None, category_id: int = None,
-                 source_url: str = None, brand_name: str = None):
+                 source_url: str = None, brand_name: str = None,
+                 specs:list=None):
         self.brand_name = brand_name
         self.source_url = source_url
         if skus is None:
             skus = []
+        if specs is None:
+            specs = []
         if images is None:
             images = []
+        self.specs = specs
         self.images = images
         self.max_price = max_price
         self.min_price = min_price
