@@ -1,0 +1,61 @@
+name: Build & Deploy (PyInstaller)
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  APP_NAME: poizon_sync                   # имя бинарника/сервиса
+  ENTRYPOINT: main.py            # точка входа для PyInstaller
+  PY_VERSION: "3.11"                 # версия Python для сборки
+  DIST_DIR: dist                     # папка с результатом сборки
+  TARGET_DIR: /var/www/fastuser/data/.poizonsyncwoo/PoizonSyncWoo        # куда класть бинарь на сервере
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PY_VERSION }}
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pyinstaller
+
+      - name: Build binary with PyInstaller
+        run: |
+          pyinstaller \
+            --onefile \
+            --name $APP_NAME \
+            --clean \
+            $ENTRYPOINT
+          ls -la $DIST_DIR
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'  # деплой только с main; при необходимости убери
+
+    steps:
+      - name: Make binary executable
+        run: chmod +x ./${{ env.APP_NAME }}
+
+      - name: Copy binary to server (atomic upload)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD}}                 # приватный ключ (PEM)
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "./${{ env.APP_NAME }}"
+          target: "${{ env.TARGET_DIR }}/${{ env.APP_NAME }}"
+          overwrite: true
