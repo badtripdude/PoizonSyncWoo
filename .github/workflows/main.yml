@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Make binary executable
-        run: chmod +x ./${{ env.APP_NAME }}
+        run: chmod +x dist/${{ env.APP_NAME }}
 
       - name: Copy binary to server (atomic upload)
         uses: appleboy/scp-action@v0.1.7
@@ -56,6 +56,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD}}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "./${{ env.APP_NAME }}"
+          source: "dist/${{ env.APP_NAME }}"
           target: "${{ env.TARGET_DIR }}/${{ env.APP_NAME }}"
           overwrite: true
