@@ -47,7 +47,9 @@ jobs:
 
     steps:
       - name: Make binary executable
-        run: chmod +x dist/${{ env.APP_NAME }}
+        run: |
+          ls
+          chmod +x dist/${{ env.APP_NAME }}
 
       - name: Copy binary to server (atomic upload)
         uses: appleboy/scp-action@v0.1.7
