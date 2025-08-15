@@ -17,6 +17,7 @@ class AsyncWooClient(WooCommerceClient):
     async def init_session(self):
         if self.session is None:
             self.session = aiohttp.ClientSession(auth=self.auth)
+
     async def close(self):
         await self.session.close()
 
@@ -119,7 +120,6 @@ class AsyncWooClient(WooCommerceClient):
             "name": base_data["name"],
             "sku": base_data.get("sku", ""),
             "description": base_data.get("description", ""),
-            "images": base_data.get("images", []),
             "type": "variable",
             "stock_status": "instock",
             "manage_stock": False,
@@ -138,6 +138,8 @@ class AsyncWooClient(WooCommerceClient):
         # Добавляем бренд в данные
         if brand:
             product_data["brands"] = [brand]
+        if not existing:
+            product_data["images"] = base_data.get("images", [])
 
         if existing:
             logger.info(f"Товар  `{product_data.get('name')}` существует, обновляем...")

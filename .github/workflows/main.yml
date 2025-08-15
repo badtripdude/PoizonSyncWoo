@@ -70,6 +70,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD}}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "dist/${{ env.APP_NAME }}"
-          target: "${{ env.TARGET_DIR }}/${{ env.APP_NAME }}"
+          source: "${{ env.DIST_DIR }}/${{ env.APP_NAME }}"
+          target: "${{ env.TARGET_DIR }}"
           overwrite: true
