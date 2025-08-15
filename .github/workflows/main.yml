@@ -39,6 +39,11 @@ jobs:
             --clean \
             $ENTRYPOINT
           ls -la $DIST_DIR
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}
+          path: ${{ env.DIST_DIR }}/${{ env.APP_NAME }}
 
   deploy:
     needs: build
@@ -46,10 +51,17 @@ jobs:
     if: github.ref == 'refs/heads/master'  # деплой только с master;
 
     steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}
+          path: ${{ env.DIST_DIR }}
+
       - name: Make binary executable
         run: |
-          ls
-          chmod +x dist/${{ env.APP_NAME }}
+          ls -R
+          test -f "${{ env.DIST_DIR }}/${{ env.APP_NAME }}" || { echo "artifact missing"; exit 1; }
+          chmod +x "${{ env.DIST_DIR }}/${{ env.APP_NAME }}"
 
       - name: Copy binary to server (atomic upload)
         uses: appleboy/scp-action@v0.1.7
