@@ -43,7 +43,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'  # деплой только с main; при необходимости убери
+    if: github.ref == 'refs/heads/master'  # деплой только с master;
 
     steps:
       - name: Make binary executable
@@ -54,7 +54,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD}}                 # приватный ключ (PEM)
+          password: ${{ secrets.SSH_PASSWORD}}
           port: ${{ secrets.SSH_PORT || 22 }}
           source: "./${{ env.APP_NAME }}"
           target: "${{ env.TARGET_DIR }}/${{ env.APP_NAME }}"
